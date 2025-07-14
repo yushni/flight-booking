@@ -1,0 +1,192 @@
+openapi: 3.1.0
+info:
+  title: Flight Booking Routes API
+  description: API for aggregating flight route information from multiple providers
+  version: 1.0.0
+  contact:
+    name: FunWithFlights
+    email: api@funwithflights.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+  - url: https://api.funwithflights.com
+    description: Production server
+
+paths:
+  /routes:
+    get:
+      summary: Get flight routes
+      description: Retrieve aggregated flight route information from multiple providers
+      operationId: getRoutes
+      parameters:
+        - name: airline
+          in: query
+          description: Filter by airline code
+          required: false
+          schema:
+            type: string
+            example: "AA"
+        - name: sourceAirport
+          in: query
+          description: Filter by source airport code
+          required: false
+          schema:
+            type: string
+            example: "JFK"
+        - name: destinationAirport
+          in: query
+          description: Filter by destination airport code
+          required: false
+          schema:
+            type: string
+            example: "LAX"
+        - name: maxStops
+          in: query
+          description: Maximum number of stops
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            example: 2
+      responses:
+        "200":
+          description: Successful response with flight routes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/FlightRoute"
+                  metadata:
+                    $ref: "#/components/schemas/ResponseMetadata"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Check the health status of the API
+      operationId: getHealth
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+components:
+  schemas:
+    FlightRoute:
+      type: object
+      required:
+        - airline
+        - sourceAirport
+        - destinationAirport
+        - codeShare
+        - stops
+      properties:
+        airline:
+          type: string
+          description: Airline code
+          example: "AA"
+        sourceAirport:
+          type: string
+          description: Source airport code
+          example: "JFK"
+        destinationAirport:
+          type: string
+          description: Destination airport code
+          example: "LAX"
+        codeShare:
+          type: string
+          description: Code share information
+          example: "Y"
+        stops:
+          type: integer
+          description: Number of stops
+          minimum: 0
+          example: 1
+        equipment:
+          type: string
+          description: Equipment type (optional)
+          example: "737"
+        provider:
+          type: string
+          description: Data provider source
+          example: "provider1"
+
+    ResponseMetadata:
+      type: object
+      properties:
+        totalCount:
+          type: integer
+          description: Total number of routes
+          example: 1500
+        providersUsed:
+          type: array
+          items:
+            type: string
+          description: List of providers used for this response
+          example: ["provider1", "provider2"]
+        cacheHit:
+          type: boolean
+          description: Whether the response was served from cache
+          example: true
+        timestamp:
+          type: string
+          format: date-time
+          description: Response timestamp
+          example: "2023-12-01T10:30:00Z"
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "healthy"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2023-12-01T10:30:00Z"
+        providers:
+          type: object
+          additionalProperties:
+            type: string
+          description: Status of each provider
+          example:
+            provider1: "healthy"
+            provider2: "healthy"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Invalid request parameters"
+        code:
+          type: string
+          description: Error code
+          example: "INVALID_REQUEST"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2023-12-01T10:30:00Z" 

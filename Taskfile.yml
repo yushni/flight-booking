@@ -1,0 +1,157 @@
+version: '3'
+
+env:
+  GO_VERSION: 1.21
+  BINARY_NAME: flight-booking
+
+vars:
+  SWAGGER_DIR: ./api
+  GENERATED_DIR: ./internal/generated
+  DOCS_DIR: ./docs
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+
+  install-tools:
+    desc: Install required tools
+    cmds:
+      - go install github.com/swaggo/swag/cmd/swag@latest
+      - go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@latest
+      - go install github.com/vektra/mockery/v2@latest
+      - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+      - go install github.com/cosmtrek/air@latest
+
+  generate-models:
+    desc: Generate models from OpenAPI spec
+    deps: [install-tools]
+    sources:
+      - "{{.SWAGGER_DIR}}/openapi.yaml"
+    generates:
+      - "{{.GENERATED_DIR}}/models/types.go"
+      - "{{.GENERATED_DIR}}/server/server.go"
+    cmds:
+      - mkdir -p {{.GENERATED_DIR}}/models
+      - mkdir -p {{.GENERATED_DIR}}/server
+      - oapi-codegen -generate types -package models {{.SWAGGER_DIR}}/openapi.yaml > {{.GENERATED_DIR}}/models/types.go
+      - oapi-codegen -generate gin -package server {{.SWAGGER_DIR}}/openapi.yaml > {{.GENERATED_DIR}}/server/server.go
+
+  generate-swagger:
+    desc: Generate swagger documentation
+    deps: [install-tools]
+    sources:
+      - "cmd/**/*.go"
+      - "internal/**/*.go"
+    generates:
+      - "{{.DOCS_DIR}}/swagger.json"
+      - "{{.DOCS_DIR}}/swagger.yaml"
+    cmds:
+      - mkdir -p {{.DOCS_DIR}}
+      - swag init -g cmd/server/main.go -o {{.DOCS_DIR}} --parseInternal
+
+  generate-mocks:
+    desc: Generate mocks using mockery
+    deps: [install-tools]
+    sources:
+      - "internal/**/*.go"
+    generates:
+      - "internal/mocks/**/*.go"
+    cmds:
+      - mockery --all --dir=internal --output=internal/mocks --case=underscore
+
+  generate:
+    desc: Generate all code (models, swagger, mocks)
+    deps: [generate-models, generate-swagger, generate-mocks]
+
+  build:
+    desc: Build the application
+    deps: [generate]
+    sources:
+      - "**/*.go"
+    generates:
+      - "{{.BINARY_NAME}}"
+    cmds:
+      - go build -o {{.BINARY_NAME}} cmd/server/main.go
+
+  run:
+    desc: Run the application
+    deps: [build]
+    cmds:
+      - ./{{.BINARY_NAME}}
+
+  dev:
+    desc: Run in development mode with hot reload
+    deps: [install-tools, generate]
+    cmds:
+      - air -c .air.toml
+
+  test:
+    desc: Run tests
+    deps: [generate]
+    cmds:
+      - go test -v ./...
+
+  test-coverage:
+    desc: Run tests with coverage
+    deps: [generate]
+    cmds:
+      - go test -v -coverprofile=coverage.out ./...
+      - go tool cover -html=coverage.out -o coverage.html
+
+  lint:
+    desc: Run linter
+    deps: [install-tools]
+    cmds:
+      - golangci-lint run
+
+  lint-fix:
+    desc: Run linter with auto-fix
+    deps: [install-tools]
+    cmds:
+      - golangci-lint run --fix
+
+  docker-build:
+    desc: Build Docker image
+    cmds:
+      - docker build -t {{.BINARY_NAME}}:latest .
+
+  docker-run:
+    desc: Run Docker container
+    deps: [docker-build]
+    cmds:
+      - docker run -p 8080:8080 --env-file .env {{.BINARY_NAME}}:latest
+
+  clean:
+    desc: Clean generated files and build artifacts
+    cmds:
+      - rm -rf {{.GENERATED_DIR}}
+      - rm -rf {{.DOCS_DIR}}
+      - rm -rf internal/mocks
+      - rm -f {{.BINARY_NAME}}
+      - rm -f coverage.out
+      - rm -f coverage.html
+
+  mod-tidy:
+    desc: Run go mod tidy
+    cmds:
+      - go mod tidy
+
+  mod-verify:
+    desc: Run go mod verify
+    cmds:
+      - go mod verify
+
+  deps:
+    desc: Download dependencies
+    cmds:
+      - go mod download
+
+  check:
+    desc: Run all checks (lint, test, build)
+    deps: [lint, test, build]
+
+  ci:
+    desc: Run CI pipeline
+    deps: [mod-verify, generate, lint, test, build] 

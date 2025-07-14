@@ -1,0 +1,16 @@
+with-expecter: true
+dir: "internal/mocks"
+filename: "{{.InterfaceName}}.go"
+mockname: "Mock{{.InterfaceName}}"
+outpkg: "mocks"
+packages:
+  flight-booking/internal/interfaces:
+    interfaces:
+      RouteProvider:
+      CacheService:
+      RouteService:
+      Logger:
+      HTTPClient:
+      MetricsCollector:
+      ProviderManager:
+      ConfigProvider: 

@@ -1,0 +1,62 @@
+---
+run:
+  timeout: 5m
+  go: "1.21"
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    - misspell
+    - gofmt
+    - goimports
+    - revive
+    - gosec
+    - goconst
+    - gocyclo
+    - funlen
+    - dupl
+
+  disable:
+    - deadcode
+    - golint
+    - interfacer
+    - maligned
+    - scopelint
+    - structcheck
+    - varcheck
+
+linters-settings:
+  funlen:
+    lines: 100
+    statements: 50
+
+  gocyclo:
+    min-complexity: 15
+
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+
+  goimports:
+    local-prefixes: flight-booking
+
+  revive:
+    rules:
+      - name: exported
+        disabled: false
+
+  lll:
+    line-length: 120
+
+  misspell:
+    locale: US 
