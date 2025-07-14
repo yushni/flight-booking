@@ -1,25 +1,28 @@
-package services
+package logger
 
 import (
 	"os"
 
+	"flight-booking/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-
-	"flight-booking/internal/config"
-	"flight-booking/internal/interfaces"
 )
 
-// ZapLogger implements the Logger interface using zap
-type ZapLogger struct {
+type Logger interface {
+	Debug(msg string, fields ...interface{})
+	Info(msg string, fields ...interface{})
+	Warn(msg string, fields ...interface{})
+	Error(msg string, fields ...interface{})
+	With(fields ...interface{}) Logger
+}
+
+type logger struct {
 	logger *zap.Logger
 }
 
-// NewZapLogger creates a new zap logger
-func NewZapLogger(config config.LogConfig) (interfaces.Logger, error) {
-	// Configure log level
+func New(config config.Config) (Logger, error) {
 	var level zapcore.Level
-	switch config.Level {
+	switch config.Log.Level {
 	case "debug":
 		level = zapcore.DebugLevel
 	case "info":
@@ -32,70 +35,58 @@ func NewZapLogger(config config.LogConfig) (interfaces.Logger, error) {
 		level = zapcore.InfoLevel
 	}
 
-	// Configure encoder
 	var encoderConfig zapcore.EncoderConfig
-	if config.Format == "json" {
+	if config.Log.Format == "json" {
 		encoderConfig = zap.NewProductionEncoderConfig()
 	} else {
 		encoderConfig = zap.NewDevelopmentEncoderConfig()
 	}
 
-	// Configure time format
 	encoderConfig.TimeKey = "timestamp"
 	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 
-	// Create encoder
 	var encoder zapcore.Encoder
-	if config.Format == "json" {
+	if config.Log.Format == "json" {
 		encoder = zapcore.NewJSONEncoder(encoderConfig)
 	} else {
 		encoder = zapcore.NewConsoleEncoder(encoderConfig)
 	}
 
-	// Create core
 	core := zapcore.NewCore(
 		encoder,
 		zapcore.AddSync(os.Stdout),
 		level,
 	)
 
-	// Create logger
-	logger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
-
-	return &ZapLogger{logger: logger}, nil
+	return &logger{
+		logger: zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1)),
+	}, nil
 }
 
-// Debug logs a debug message
-func (l *ZapLogger) Debug(msg string, fields ...interface{}) {
+func (l *logger) Debug(msg string, fields ...interface{}) {
 	l.logger.Debug(msg, l.convertFields(fields...)...)
 }
 
-// Info logs an info message
-func (l *ZapLogger) Info(msg string, fields ...interface{}) {
+func (l *logger) Info(msg string, fields ...interface{}) {
 	l.logger.Info(msg, l.convertFields(fields...)...)
 }
 
-// Warn logs a warning message
-func (l *ZapLogger) Warn(msg string, fields ...interface{}) {
+func (l *logger) Warn(msg string, fields ...interface{}) {
 	l.logger.Warn(msg, l.convertFields(fields...)...)
 }
 
-// Error logs an error message
-func (l *ZapLogger) Error(msg string, fields ...interface{}) {
+func (l *logger) Error(msg string, fields ...interface{}) {
 	l.logger.Error(msg, l.convertFields(fields...)...)
 }
 
-// With creates a new logger with additional fields
-func (l *ZapLogger) With(fields ...interface{}) interfaces.Logger {
-	return &ZapLogger{
+func (l *logger) With(fields ...interface{}) Logger {
+	return &logger{
 		logger: l.logger.With(l.convertFields(fields...)...),
 	}
 }
 
-// convertFields converts key-value pairs to zap fields
-func (l *ZapLogger) convertFields(fields ...interface{}) []zap.Field {
+func (l *logger) convertFields(fields ...interface{}) []zap.Field {
 	if len(fields)%2 != 0 {
-		// If odd number of arguments, treat last as a field without value
 		fields = append(fields, nil)
 	}
 
@@ -113,12 +104,10 @@ func (l *ZapLogger) convertFields(fields ...interface{}) []zap.Field {
 	return zapFields
 }
 
-// Sync flushes any buffered log entries
-func (l *ZapLogger) Sync() error {
+func (l *logger) Sync() error {
 	return l.logger.Sync()
 }
 
-// Close closes the logger
-func (l *ZapLogger) Close() error {
+func (l *logger) Close() error {
 	return l.logger.Sync()
 }

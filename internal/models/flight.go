@@ -30,13 +30,6 @@ type ResponseMetadata struct {
 	Timestamp     time.Time `json:"timestamp"`
 }
 
-// HealthResponse represents the health check response
-type HealthResponse struct {
-	Status    string            `json:"status"`
-	Timestamp time.Time         `json:"timestamp"`
-	Providers map[string]string `json:"providers"`
-}
-
 // ErrorResponse represents an error response
 type ErrorResponse struct {
 	Error     string    `json:"error"`
