@@ -2,33 +2,27 @@ package cache
 
 import (
 	"sync"
+	"time"
 
-	"flight-booking/config"
 	"github.com/patrickmn/go-cache"
 )
 
 type Cache interface {
-	GetOrLoad(key string, loader func() (any, error)) (any, error)
+	GetOrLoad(key string, ttl time.Duration, loader func() (any, error)) (any, error)
 }
 
 type inMemoryCache struct {
-	cfg   config.CacheConfig
 	cache *cache.Cache
 	mu    sync.RWMutex
 }
 
-func New(cfg config.CacheConfig) Cache {
+func New() Cache {
 	return &inMemoryCache{
-		cfg:   cfg,
-		cache: cache.New(cfg.DefaultTTL, cfg.CleanupInterval),
+		cache: cache.New(time.Second, time.Second),
 	}
 }
 
-func (c *inMemoryCache) GetOrLoad(key string, loader func() (any, error)) (any, error) {
-	if !c.cfg.Enabled {
-		return nil, nil
-	}
-
+func (c *inMemoryCache) GetOrLoad(key string, ttl time.Duration, loader func() (any, error)) (any, error) {
 	c.mu.RLock()
 	value, found := c.cache.Get(key)
 	c.mu.RUnlock()
@@ -42,6 +36,6 @@ func (c *inMemoryCache) GetOrLoad(key string, loader func() (any, error)) (any, 
 		return nil, err
 	}
 
-	c.cache.Set(key, newValue, c.cfg.DefaultTTL)
+	c.cache.Set(key, newValue, ttl)
 	return newValue, nil
 }

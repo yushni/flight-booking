@@ -15,10 +15,8 @@ func RequestLogger(logger logger.Logger) gen.MiddlewareFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 
-		// Process request
 		c.Next()
 
-		// Log after request
 		duration := time.Since(start)
 		logger.Info("HTTP request",
 			"method", c.Request.Method,

@@ -3,7 +3,7 @@ package logger
 import (
 	"os"
 
-	"flight-booking/config"
+	"flight-booking/internal/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
