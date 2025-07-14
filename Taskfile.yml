@@ -18,7 +18,7 @@ tasks:
     desc: Run linter
     cmds:
       - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-      - golangci-lint run
+      - golangci-lint run --fix
 
   generate:
     desc: Generate all code (models, swagger, mocks)

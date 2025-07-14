@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// RequestLogger logs HTTP requests
+// RequestLogger logs HTTP requests.
 func RequestLogger(logger logger.Logger) gen.MiddlewareFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
@@ -31,7 +31,7 @@ func RequestLogger(logger logger.Logger) gen.MiddlewareFunc {
 	}
 }
 
-// Panic handles panics and errors
+// Panic handles panics and errors.
 func Panic(logger logger.Logger) gen.MiddlewareFunc {
 	return func(c *gin.Context) {
 		defer func() {
@@ -53,7 +53,7 @@ func Panic(logger logger.Logger) gen.MiddlewareFunc {
 	}
 }
 
-// ErrorHandler handles errors and sends appropriate responses
+// ErrorHandler handles errors and sends appropriate responses.
 func ErrorHandler(logger logger.Logger) func(*gin.Context, error, int) {
 	return func(c *gin.Context, err error, i int) {
 		c.Next()
@@ -71,13 +71,13 @@ func ErrorHandler(logger logger.Logger) func(*gin.Context, error, int) {
 
 			c.JSON(http.StatusInternalServerError, errorResponse)
 			c.Abort()
+
 			return
 		}
 	}
-
 }
 
-// CORSHandler handles CORS headers
+// CORSHandler handles CORS headers.
 func CORSHandler() gen.MiddlewareFunc {
 	return func(c *gin.Context) {
 		c.Header("Access-Control-Allow-Origin", "*")
@@ -85,8 +85,9 @@ func CORSHandler() gen.MiddlewareFunc {
 		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Request-ID")
 		c.Header("Access-Control-Max-Age", "86400")
 
-		if c.Request.Method == "OPTIONS" {
+		if c.Request.Method == http.MethodOptions {
 			c.AbortWithStatus(http.StatusOK)
+
 			return
 		}
 
@@ -94,7 +95,7 @@ func CORSHandler() gen.MiddlewareFunc {
 	}
 }
 
-// RequestID adds a unique request ID to each request
+// RequestID adds a unique request ID to each request.
 func RequestID() gen.MiddlewareFunc {
 	return func(c *gin.Context) {
 		requestID := c.GetHeader("X-Request-ID")

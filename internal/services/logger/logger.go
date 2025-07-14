@@ -22,6 +22,7 @@ type logger struct {
 
 func New(config config.Config) (Logger, error) {
 	var level zapcore.Level
+
 	switch config.Log.Level {
 	case "debug":
 		level = zapcore.DebugLevel
@@ -91,6 +92,7 @@ func (l *logger) convertFields(fields ...interface{}) []zap.Field {
 	}
 
 	zapFields := make([]zap.Field, 0, len(fields)/2)
+
 	for i := 0; i < len(fields); i += 2 {
 		key, ok := fields[i].(string)
 		if !ok {

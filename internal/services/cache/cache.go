@@ -37,5 +37,6 @@ func (c *inMemoryCache) GetOrLoad(key string, ttl time.Duration, loader func() (
 	}
 
 	c.cache.Set(key, newValue, ttl)
+
 	return newValue, nil
 }

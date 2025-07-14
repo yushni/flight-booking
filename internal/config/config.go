@@ -24,6 +24,6 @@ type ServerConfig struct {
 }
 
 type LogConfig struct {
-	Level  string `env:"LOG_LEVEL" envDefault:"debug"`
+	Level  string `env:"LOG_LEVEL"  envDefault:"debug"`
 	Format string `env:"LOG_FORMAT" envDefault:"json"`
 }

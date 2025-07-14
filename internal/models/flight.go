@@ -1,28 +1,29 @@
 package models
 
 import (
+	"errors"
 	"fmt"
 	"time"
 )
 
-// FlightRoute represents a flight route
+// FlightRoute represents a flight route.
 type FlightRoute struct {
-	Airline            string  `json:"airline" validate:"required"`
-	SourceAirport      string  `json:"sourceAirport" validate:"required"`
-	DestinationAirport string  `json:"destinationAirport" validate:"required"`
-	CodeShare          string  `json:"codeShare" validate:"required"`
-	Stops              int     `json:"stops" validate:"min=0"`
+	Airline            string  `json:"airline"             validate:"required"`
+	SourceAirport      string  `json:"sourceAirport"       validate:"required"`
+	DestinationAirport string  `json:"destinationAirport"  validate:"required"`
+	CodeShare          string  `json:"codeShare"           validate:"required"`
+	Stops              int     `json:"stops"               validate:"min=0"`
 	Equipment          *string `json:"equipment,omitempty"`
 	Provider           string  `json:"provider"`
 }
 
-// RoutesResponse represents the response for flight routes
+// RoutesResponse represents the response for flight routes.
 type RoutesResponse struct {
 	Data     []FlightRoute    `json:"data"`
 	Metadata ResponseMetadata `json:"metadata"`
 }
 
-// ResponseMetadata represents metadata for the response
+// ResponseMetadata represents metadata for the response.
 type ResponseMetadata struct {
 	TotalCount    int       `json:"totalCount"`
 	ProvidersUsed []string  `json:"providersUsed"`
@@ -30,34 +31,34 @@ type ResponseMetadata struct {
 	Timestamp     time.Time `json:"timestamp"`
 }
 
-// ErrorResponse represents an error response
+// ErrorResponse represents an error response.
 type ErrorResponse struct {
 	Error     string    `json:"error"`
 	Code      string    `json:"code"`
 	Timestamp time.Time `json:"timestamp"`
 }
 
-// RouteFilters represents filters for route queries
+// RouteFilters represents filters for route queries.
 type RouteFilters struct {
 	Airline            string `form:"airline"`
 	SourceAirport      string `form:"sourceAirport"`
 	DestinationAirport string `form:"destinationAirport"`
-	MaxStops           *int   `form:"maxStops" validate:"omitempty,min=0"`
+	MaxStops           *int   `form:"maxStops"           validate:"omitempty,min=0"`
 }
 
-// ProviderResponse represents the response from a provider
+// ProviderResponse represents the response from a provider.
 type ProviderResponse struct {
 	Routes   []FlightRoute `json:"routes"`
 	Provider string        `json:"provider"`
 	Error    error         `json:"error,omitempty"`
 }
 
-// CacheKey represents a cache key for routes
+// CacheKey represents a cache key for routes.
 type CacheKey struct {
 	Filters RouteFilters `json:"filters"`
 }
 
-// String returns the string representation of the cache key
+// String returns the string representation of the cache key.
 func (ck CacheKey) String() string {
 	return fmt.Sprintf("routes:%s:%s:%s:%d",
 		ck.Filters.Airline,
@@ -66,15 +67,16 @@ func (ck CacheKey) String() string {
 		getIntValue(ck.Filters.MaxStops))
 }
 
-// getIntValue returns the value of an int pointer or -1 if nil
+// getIntValue returns the value of an int pointer or -1 if nil.
 func getIntValue(ptr *int) int {
 	if ptr == nil {
 		return -1
 	}
+
 	return *ptr
 }
 
-// ApplyFilters applies filters to a slice of flight routes
+// ApplyFilters applies filters to a slice of flight routes.
 func (filters RouteFilters) ApplyFilters(routes []FlightRoute) []FlightRoute {
 	if len(routes) == 0 {
 		return routes
@@ -105,26 +107,26 @@ func (filters RouteFilters) ApplyFilters(routes []FlightRoute) []FlightRoute {
 	return filtered
 }
 
-// Validate validates the flight route
+// Validate validates the flight route.
 func (fr *FlightRoute) Validate() error {
 	if fr.Airline == "" {
-		return fmt.Errorf("airline is required")
+		return errors.New("airline is required")
 	}
 
 	if fr.SourceAirport == "" {
-		return fmt.Errorf("source airport is required")
+		return errors.New("source airport is required")
 	}
 
 	if fr.DestinationAirport == "" {
-		return fmt.Errorf("destination airport is required")
+		return errors.New("destination airport is required")
 	}
 
 	if fr.CodeShare == "" {
-		return fmt.Errorf("code share is required")
+		return errors.New("code share is required")
 	}
 
 	if fr.Stops < 0 {
-		return fmt.Errorf("stops must be non-negative")
+		return errors.New("stops must be non-negative")
 	}
 
 	return nil

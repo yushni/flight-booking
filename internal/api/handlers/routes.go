@@ -5,11 +5,10 @@ import (
 	"time"
 
 	"flight-booking/internal/api/gen"
-	"flight-booking/internal/services/logger"
-	"github.com/gin-gonic/gin"
-
 	"flight-booking/internal/models"
+	"flight-booking/internal/services/logger"
 	"flight-booking/internal/usecases"
+	"github.com/gin-gonic/gin"
 )
 
 type RouteHandler struct {
@@ -17,7 +16,7 @@ type RouteHandler struct {
 	logger       logger.Logger
 }
 
-// NewRouteHandler creates a new route handler
+// NewRouteHandler creates a new route handler.
 func NewRouteHandler(routeService usecases.Routes, logger logger.Logger) *RouteHandler {
 	return &RouteHandler{
 		routeService: routeService,
@@ -25,7 +24,7 @@ func NewRouteHandler(routeService usecases.Routes, logger logger.Logger) *RouteH
 	}
 }
 
-// GetRoutes implements the GetRoutes method from ServerInterface
+// GetRoutes implements the GetRoutes method from ServerInterface.
 func (h *RouteHandler) GetRoutes(c *gin.Context, params gen.GetRoutesParams) {
 	filters := h.convertParamsToFilters(params)
 
@@ -33,6 +32,7 @@ func (h *RouteHandler) GetRoutes(c *gin.Context, params gen.GetRoutesParams) {
 	if err != nil {
 		h.logger.Error("Service error", "error", err)
 		h.sendErrorResponse(c, http.StatusInternalServerError, "SERVICE_ERROR", "Failed to fetch routes")
+
 		return
 	}
 
@@ -46,12 +46,15 @@ func (h *RouteHandler) convertParamsToFilters(params gen.GetRoutesParams) models
 	if params.Airline != nil {
 		filters.Airline = *params.Airline
 	}
+
 	if params.SourceAirport != nil {
 		filters.SourceAirport = *params.SourceAirport
 	}
+
 	if params.DestinationAirport != nil {
 		filters.DestinationAirport = *params.DestinationAirport
 	}
+
 	if params.MaxStops != nil {
 		filters.MaxStops = params.MaxStops
 	}

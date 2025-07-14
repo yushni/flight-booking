@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"time"
 
@@ -41,8 +42,7 @@ func NewServer(
 
 	lc.Append(fx.StartHook(func(ctx context.Context) error {
 		go func() {
-			// service connections
-			if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 				logger.Error("listen: %s\n", err)
 			}
 		}()
