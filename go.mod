@@ -10,6 +10,7 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	go.uber.org/fx v1.24.0
 	go.uber.org/zap v1.27.0
+	resty.dev/v3 v3.0.0-beta.3
 )
 
 require (
