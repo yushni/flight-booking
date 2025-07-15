@@ -15,7 +15,16 @@
         }
       ],
       "essential": true,
-      "environment": [],
+      "environment": [
+        {
+          "name": "PROVIDER1_CACHE_TTL",
+          "value": "3600s"
+        },
+        {
+          "name": "PROVIDER2_CACHE_TTL",
+          "value": "3600s"
+        }
+      ],
       "environmentFiles": [],
       "mountPoints": [],
       "volumesFrom": [],
