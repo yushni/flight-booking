@@ -161,6 +161,10 @@ components:
           type: string
           description: Data provider source
           example: "provider1"
+        provider2:
+          type: string
+          description: Data provider source
+          example: "provider1"
 
     RoutesResponse:
       type: object

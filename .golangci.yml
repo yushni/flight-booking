@@ -12,3 +12,4 @@ linters:
     - depguard
     - exhaustruct
     - err113
+    - tenv
