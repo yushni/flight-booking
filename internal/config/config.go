@@ -32,8 +32,8 @@ type ProvidersConfig struct {
 }
 
 type ServerConfig struct {
-	Port string `env:"SERVER_PORT" envDefault:":8080"`
-	Host string `env:"SERVER_HOST" envDefault:"localhost"`
+	Port string `env:"SERVER_PORT" envDefault:"80"`
+	Host string `env:"SERVER_HOST" envDefault:"0.0.0.0"`
 }
 
 type LogConfig struct {

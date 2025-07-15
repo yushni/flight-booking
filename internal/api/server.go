@@ -3,11 +3,13 @@ package api
 import (
 	"context"
 	"errors"
+	"net"
 	"net/http"
 	"time"
 
 	"flight-booking/internal/api/gen"
 	"flight-booking/internal/api/handlers"
+	"flight-booking/internal/config"
 	"flight-booking/internal/services/logger"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
@@ -18,6 +20,7 @@ func NewServer(
 	healthHandlers *handlers.HealthHandler,
 
 	logger logger.Logger,
+	config config.Config,
 	lc fx.Lifecycle,
 ) {
 	allHandlers := struct {
@@ -41,7 +44,7 @@ func NewServer(
 	})
 
 	srv := &http.Server{
-		Addr:              ":80",
+		Addr:              net.JoinHostPort(config.Server.Host, config.Server.Port),
 		Handler:           engine.Handler(),
 		ReadHeaderTimeout: 60 * time.Second,
 		ReadTimeout:       60 * time.Second,
