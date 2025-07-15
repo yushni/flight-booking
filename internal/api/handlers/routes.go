@@ -57,6 +57,12 @@ func (h *RouteHandler) convertParamsToFilters(params gen.GetRoutesParams) models
 	if params.MaxStops != nil {
 		filters.MaxStops = params.MaxStops
 	}
+	if params.Limit != nil {
+		filters.Limit = *params.Limit
+	}
+	if params.Offset != nil {
+		filters.Offset = *params.Offset
+	}
 
 	return filters
 }
