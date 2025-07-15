@@ -41,7 +41,7 @@ func NewServer(
 	})
 
 	srv := &http.Server{
-		Addr:              ":8080",
+		Addr:              ":80",
 		Handler:           engine.Handler(),
 		ReadHeaderTimeout: 60 * time.Second,
 		ReadTimeout:       60 * time.Second,
