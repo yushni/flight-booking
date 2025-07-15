@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"context"
 	"os"
 
 	"flight-booking/internal/config"
@@ -14,6 +15,13 @@ type Logger interface {
 	Warn(msg string, fields ...interface{})
 	Error(msg string, fields ...interface{})
 	With(fields ...interface{}) Logger
+}
+
+func Context(ctx context.Context) Logger {
+	if logger, ok := ctx.Value("logger").(Logger); ok {
+		return logger
+	}
+	return &logger{logger: zap.NewNop()}
 }
 
 type logger struct {
@@ -62,6 +70,12 @@ func New(config config.Config) (Logger, error) {
 	return &logger{
 		logger: zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1)),
 	}, nil
+}
+
+func (l *logger) Clone() Logger {
+	return &logger{
+		logger: l.logger.WithOptions(zap.AddCallerSkip(1)),
+	}
 }
 
 func (l *logger) Debug(msg string, fields ...interface{}) {

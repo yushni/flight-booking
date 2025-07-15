@@ -8,6 +8,7 @@ import (
 	"flight-booking/internal/config"
 	"flight-booking/internal/models"
 	"flight-booking/internal/services/cache"
+	"flight-booking/internal/services/logger"
 	"resty.dev/v3"
 )
 
@@ -49,23 +50,18 @@ func New(config config.Config, cache cache.Cache) Provider {
 
 func (p provider) GetRoutes(ctx context.Context, filters models.RouteFilters) ([]models.Route, error) {
 	var routes []models.Route
-
-	var err error
-
 	routes1, err := p.routesFromProvider1(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching routes from provider1: %w", err)
+		logger.Context(ctx).Error("error fetching routes from provider1", "error", err)
 	}
 
 	routes = append(routes, routes1...)
-
 	routes2, err := p.routesFromProvider2(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching routes from provider2: %w", err)
+		logger.Context(ctx).Error("error fetching routes from provider2", "error", err)
 	}
 
 	routes = append(routes, routes2...)
-
 	return p.ApplyFilters(filters, routes), nil
 }
 

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -10,15 +11,14 @@ import (
 	"github.com/google/uuid"
 )
 
-// RequestLogger logs HTTP requests.
-func RequestLogger(logger logger.Logger) gen.MiddlewareFunc {
+func RequestLogger() gen.MiddlewareFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 
 		c.Next()
 
 		duration := time.Since(start)
-		logger.Info("HTTP request",
+		logger.Context(c.Request.Context()).Info("HTTP request",
 			"method", c.Request.Method,
 			"path", c.Request.URL.Path,
 			"query", c.Request.URL.RawQuery,
@@ -31,13 +31,11 @@ func RequestLogger(logger logger.Logger) gen.MiddlewareFunc {
 	}
 }
 
-// Panic handles panics and errors.
-func Panic(logger logger.Logger) gen.MiddlewareFunc {
+func Panic() gen.MiddlewareFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
-				logger.With("request_id", c.GetString("request_id")).
-					Error("Panic recovered", "error", err)
+				logger.Context(c.Request.Context()).Error("Panic recovered", "error", err)
 
 				errorResponse := gen.ErrorResponse{
 					Error:     "Internal server error",
@@ -54,16 +52,13 @@ func Panic(logger logger.Logger) gen.MiddlewareFunc {
 	}
 }
 
-// ErrorHandler handles errors and sends appropriate responses.
-func ErrorHandler(logger logger.Logger) func(*gin.Context, error, int) {
+func ErrorHandler() func(*gin.Context, error, int) {
 	return func(c *gin.Context, err error, i int) {
 		c.Next()
 
 		if len(c.Errors) > 0 {
 			for _, err := range c.Errors {
-				logger.
-					With("request_id", c.GetString("request_id")).
-					Error("Error in API handler", "error", err.Err)
+				logger.Context(c.Request.Context()).Error("Error in API handler", "error", err.Err)
 			}
 
 			errorResponse := gen.ErrorResponse{
@@ -80,25 +75,6 @@ func ErrorHandler(logger logger.Logger) func(*gin.Context, error, int) {
 	}
 }
 
-// CORSHandler handles CORS headers.
-func CORSHandler() gen.MiddlewareFunc {
-	return func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "*")
-		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Request-ID")
-		c.Header("Access-Control-Max-Age", "86400")
-
-		if c.Request.Method == http.MethodOptions {
-			c.AbortWithStatus(http.StatusOK)
-
-			return
-		}
-
-		c.Next()
-	}
-}
-
-// RequestID adds a unique request ID to each request.
 func RequestID() gen.MiddlewareFunc {
 	return func(c *gin.Context) {
 		requestID := c.GetHeader("X-Request-ID")
@@ -108,6 +84,18 @@ func RequestID() gen.MiddlewareFunc {
 
 		c.Header("X-Request-ID", requestID)
 		c.Set("request_id", requestID)
+		c.Next()
+	}
+}
+
+func ContextLogger(logger logger.Logger) gen.MiddlewareFunc {
+	return func(c *gin.Context) {
+		reqID := c.GetString("request_id")
+
+		l := logger.With("request_id", reqID)
+		ctx := context.WithValue(c.Request.Context(), "logger", l)
+
+		c.Request = c.Request.WithContext(ctx)
 		c.Next()
 	}
 }

@@ -28,11 +28,11 @@ func NewServer(
 	gen.RegisterHandlersWithOptions(engine, allHandlers, gen.GinServerOptions{
 		Middlewares: []gen.MiddlewareFunc{
 			RequestID(),
-			CORSHandler(),
-			Panic(logger),
-			RequestLogger(logger),
+			ContextLogger(logger),
+			Panic(),
+			RequestLogger(),
 		},
-		ErrorHandler: ErrorHandler(logger),
+		ErrorHandler: ErrorHandler(),
 	})
 
 	srv := &http.Server{
