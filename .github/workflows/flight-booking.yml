@@ -1,0 +1,48 @@
+name: flight-booking CI/CD Pipeline
+on:
+  push:
+    branches:
+      - main
+  release:
+    types: [ created ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+      - name: Build
+        run: CGO_ENABLED=0 GOOS=linux go build -o flight-booking .
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the Docker image
+        run: docker build -t flight-booking .
+
+  docker-push:
+    if: github.event_name == 'release'
+    name: Push Docker image to Docker Hub 🚀
+    runs-on: ubuntu-latest
+    needs:
+      - docker-build
+    steps:
+      - name: Check out the repo 🛎️
+        uses: actions/checkout@v4
+      - name: Log in to Docker Hub 🔑
+        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
+        with:
+          username: yurashni
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+      - name: Build and push Docker image 🏗️
+        id: push
+        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
+        with:
+          context: .
+          push: true
+          tags: "yurashni/flight-booking:${{ github.ref_name }}"
