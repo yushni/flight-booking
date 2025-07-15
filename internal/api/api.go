@@ -9,6 +9,7 @@ func Module() fx.Option {
 	return fx.Options(
 		fx.Provide(
 			handlers.NewRouteHandler,
+			handlers.NewHealthHandler,
 		),
 		fx.Invoke(NewServer),
 	)

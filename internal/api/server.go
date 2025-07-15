@@ -13,11 +13,19 @@ import (
 	"go.uber.org/fx"
 )
 
-func NewServer(routeHandlers *handlers.RouteHandler, logger logger.Logger, lc fx.Lifecycle) {
+func NewServer(
+	routeHandlers *handlers.RouteHandler,
+	healthHandlers *handlers.HealthHandler,
+
+	logger logger.Logger,
+	lc fx.Lifecycle,
+) {
 	allHandlers := struct {
 		*handlers.RouteHandler
+		*handlers.HealthHandler
 	}{
-		RouteHandler: routeHandlers,
+		RouteHandler:  routeHandlers,
+		HealthHandler: healthHandlers,
 	}
 
 	engine := gin.New()

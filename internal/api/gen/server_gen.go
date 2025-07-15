@@ -16,6 +16,9 @@ type ServerInterface interface {
 	// Get flight routes
 	// (GET /api/v1/routes)
 	GetRoutes(c *gin.Context, params GetRoutesParams)
+	// Health check
+	// (GET /health)
+	HealthCheck(c *gin.Context)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -93,6 +96,19 @@ func (siw *ServerInterfaceWrapper) GetRoutes(c *gin.Context) {
 	siw.Handler.GetRoutes(c, params)
 }
 
+// HealthCheck operation middleware
+func (siw *ServerInterfaceWrapper) HealthCheck(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.HealthCheck(c)
+}
+
 // GinServerOptions provides options for the Gin server.
 type GinServerOptions struct {
 	BaseURL      string
@@ -121,4 +137,5 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	}
 
 	router.GET(options.BaseURL+"/api/v1/routes", wrapper.GetRoutes)
+	router.GET(options.BaseURL+"/health", wrapper.HealthCheck)
 }
