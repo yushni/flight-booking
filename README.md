@@ -59,16 +59,6 @@ Run `task` in this directory to see all available tasks with descriptions.
 
 The API follows the OpenAPI 3.0 specification defined in `openapi.yaml`. This project uses an API-first approach where the schema is defined first and then code is generated from it.
 
-### Get Flight Routes
-```http
-GET /api/v1/routes?airline=AA&sourceAirport=JFK&destinationAirport=LAX&maxStops=2
-```
-
-### Health Check
-```http
-GET /health
-```
-
 ## Configuration
 
 ### Environment Variables
