@@ -21,13 +21,14 @@ func NewServer(routeHandlers *handlers.RouteHandler, logger logger.Logger, lc fx
 	}
 
 	engine := gin.New()
+	engine.Use(
+		RequestID(),
+		ContextLogger(logger),
+		RequestLogger(),
+		Panic(),
+	)
+
 	gen.RegisterHandlersWithOptions(engine, allHandlers, gen.GinServerOptions{
-		Middlewares: []gen.MiddlewareFunc{
-			RequestID(),
-			ContextLogger(logger),
-			Panic(),
-			RequestLogger(),
-		},
 		ErrorHandler: ErrorHandler(),
 	})
 

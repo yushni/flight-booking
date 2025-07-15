@@ -31,6 +31,9 @@ func (c *inMemoryCache) GetOrLoad(key string, ttl time.Duration, loader func() (
 		return value, nil
 	}
 
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	newValue, err := loader()
 	if err != nil {
 		return nil, err

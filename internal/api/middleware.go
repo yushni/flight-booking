@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func RequestLogger() gen.MiddlewareFunc {
+func RequestLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 
@@ -30,7 +30,7 @@ func RequestLogger() gen.MiddlewareFunc {
 	}
 }
 
-func Panic() gen.MiddlewareFunc {
+func Panic() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -74,7 +74,7 @@ func ErrorHandler() func(*gin.Context, error, int) {
 	}
 }
 
-func RequestID() gen.MiddlewareFunc {
+func RequestID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		requestID := c.GetHeader("X-Request-ID")
 		if requestID == "" {
@@ -87,7 +87,7 @@ func RequestID() gen.MiddlewareFunc {
 	}
 }
 
-func ContextLogger(logger logger.Logger) gen.MiddlewareFunc {
+func ContextLogger(logger logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
 		l := logger.With("request_id", c.GetString("request_id"))
