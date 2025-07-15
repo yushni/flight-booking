@@ -1,17 +1,11 @@
-with-expecter: true
+keeptree: False
+with-expecter: True
+inpackage: True
+dir: "{{.InterfaceDirRelative}}"
+outpkg: "{{.PackageName}}"
+filename: "{{.InterfaceName | snakecase}}_mock.go"
+
 packages:
-  flight-booking/internal/interfaces:
-    config:
-      dir: "internal/mocks"
-      filename: "{{.InterfaceName}}.go"
-      mockname: "Mock{{.InterfaceName}}"
-      outpkg: "mocks"
+  flight-booking/internal/services/cache:
     interfaces:
-      RouteProvider:
-      CacheService:
-      RouteService:
-      Logger:
-      HTTPClient:
-      MetricsCollector:
-      ProviderManager:
-      ConfigProvider: 
+      Cache:

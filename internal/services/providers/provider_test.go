@@ -14,20 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type MockCache struct {
-	mock.Mock
-}
-
-func (m *MockCache) GetOrLoad(key string, ttl time.Duration, loader func() (any, error)) (any, error) {
-	args := m.Called(key, ttl, loader)
-
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-
-	return args.Get(0), args.Error(1)
-}
-
 func createTestConfig(provider1URL, provider2URL string) config.Config {
 	return config.Config{
 		Providers: config.ProvidersConfig{
@@ -116,9 +102,14 @@ func TestProvider_GetRoutes_Success(t *testing.T) {
 	}))
 	defer server2.Close()
 
-	mockCache := &MockCache{}
-	mockCache.On("GetOrLoad", "provider1_routes", mock.AnythingOfType("time.Duration"), mock.AnythingOfType("func() (interface {}, error)")).Return(provider1Routes, nil)
-	mockCache.On("GetOrLoad", "provider2_routes", mock.AnythingOfType("time.Duration"), mock.AnythingOfType("func() (interface {}, error)")).Return(provider2Routes, nil)
+	mockCache := cache.NewMockCache(t)
+	mockCache.EXPECT().
+		GetOrLoad("provider1_routes", mock.AnythingOfType("time.Duration"), mock.AnythingOfType("func() (interface {}, error)")).
+		Return(provider1Routes, nil)
+
+	mockCache.EXPECT().
+		GetOrLoad("provider2_routes", mock.AnythingOfType("time.Duration"), mock.AnythingOfType("func() (interface {}, error)")).
+		Return(provider2Routes, nil)
 
 	cfg := createTestConfig(server1.URL, server2.URL)
 	provider := New(cfg, mockCache)
@@ -129,7 +120,6 @@ func TestProvider_GetRoutes_Success(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Len(t, routes, 4)
-	mockCache.AssertExpectations(t)
 }
 
 func TestProvider_GetRoutes_Provider2Fails(t *testing.T) {
@@ -278,9 +268,14 @@ func TestProvider_CacheHit(t *testing.T) {
 	provider1Routes := createMockRoutes("provider1")
 	provider2Routes := createMockRoutes("provider2")
 
-	mockCache := &MockCache{}
-	mockCache.On("GetOrLoad", "provider1_routes", mock.AnythingOfType("time.Duration"), mock.AnythingOfType("func() (interface {}, error)")).Return(provider1Routes, nil)
-	mockCache.On("GetOrLoad", "provider2_routes", mock.AnythingOfType("time.Duration"), mock.AnythingOfType("func() (interface {}, error)")).Return(provider2Routes, nil)
+	mockCache := cache.NewMockCache(t)
+	mockCache.EXPECT().
+		GetOrLoad("provider1_routes", mock.AnythingOfType("time.Duration"), mock.AnythingOfType("func() (interface {}, error)")).
+		Return(provider1Routes, nil)
+
+	mockCache.EXPECT().
+		GetOrLoad("provider2_routes", mock.AnythingOfType("time.Duration"), mock.AnythingOfType("func() (interface {}, error)")).
+		Return(provider2Routes, nil)
 
 	cfg := createTestConfig(server1.URL, server2.URL)
 	provider := New(cfg, mockCache)
