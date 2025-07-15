@@ -15,8 +15,8 @@ const (
 
 // ErrorResponse defines model for ErrorResponse.
 type ErrorResponse struct {
-	// Code Error code
-	Code string `json:"code"`
+	// Code HTTP status code
+	Code int `json:"code"`
 
 	// Error Error message
 	Error string `json:"error"`
@@ -52,26 +52,10 @@ type FlightRoute struct {
 // FlightRouteCodeShare Code share information
 type FlightRouteCodeShare string
 
-// ResponseMetadata defines model for ResponseMetadata.
-type ResponseMetadata struct {
-	// CacheHit Whether the response was served from cache
-	CacheHit bool `json:"cacheHit"`
-
-	// ProvidersUsed List of providers used for this response
-	ProvidersUsed []string `json:"providersUsed"`
-
-	// Timestamp Response timestamp
-	Timestamp time.Time `json:"timestamp"`
-
-	// TotalCount Total number of routes
-	TotalCount int `json:"totalCount"`
-}
-
 // RoutesResponse defines model for RoutesResponse.
 type RoutesResponse struct {
 	// Data Array of flight routes
-	Data     []FlightRoute    `json:"data"`
-	Metadata ResponseMetadata `json:"metadata"`
+	Data []FlightRoute `json:"data"`
 }
 
 // GetRoutesParams defines parameters for GetRoutes.
@@ -87,4 +71,10 @@ type GetRoutesParams struct {
 
 	// MaxStops Maximum number of stops
 	MaxStops *int `form:"maxStops,omitempty" json:"maxStops,omitempty"`
+
+	// Limit Maximum number of routes to return
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Offset Offset for pagination
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 }

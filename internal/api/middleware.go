@@ -36,11 +36,12 @@ func Panic(logger logger.Logger) gen.MiddlewareFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
-				logger.Error("Panic recovered", "error", err)
+				logger.With("request_id", c.GetString("request_id")).
+					Error("Panic recovered", "error", err)
 
 				errorResponse := gen.ErrorResponse{
 					Error:     "Internal server error",
-					Code:      "INTERNAL_ERROR",
+					Code:      http.StatusInternalServerError,
 					Timestamp: time.Now(),
 				}
 
@@ -60,12 +61,14 @@ func ErrorHandler(logger logger.Logger) func(*gin.Context, error, int) {
 
 		if len(c.Errors) > 0 {
 			for _, err := range c.Errors {
-				logger.Error("Error in API handler", "error", err.Err)
+				logger.
+					With("request_id", c.GetString("request_id")).
+					Error("Error in API handler", "error", err.Err)
 			}
 
 			errorResponse := gen.ErrorResponse{
 				Error:     "Internal server error",
-				Code:      "INTERNAL_ERROR",
+				Code:      http.StatusInternalServerError,
 				Timestamp: time.Now(),
 			}
 

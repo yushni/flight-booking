@@ -58,6 +58,25 @@ paths:
             minimum: 0
             maximum: 10
             example: 2
+        - name: limit
+          in: query
+          description: Maximum number of routes to return
+          required: false
+          schema:
+              type: integer
+              minimum: 1
+              maximum: 1000
+              default: 100
+              example: 50
+        - name: offset
+          in: query
+          description: Offset for pagination
+          required: false
+          schema:
+              type: integer
+              minimum: 0
+              default: 0
+              example: 10
       responses:
         "200":
           description: Successful response with flight routes
@@ -129,46 +148,12 @@ components:
       type: object
       required:
         - data
-        - metadata
       properties:
         data:
           type: array
           items:
             $ref: "#/components/schemas/FlightRoute"
           description: Array of flight routes
-        metadata:
-          $ref: "#/components/schemas/ResponseMetadata"
-
-    ResponseMetadata:
-      type: object
-      required:
-        - totalCount
-        - providersUsed
-        - cacheHit
-        - timestamp
-      properties:
-        totalCount:
-          type: integer
-          description: Total number of routes
-          minimum: 0
-          example: 1500
-        providersUsed:
-          type: array
-          items:
-            type: string
-          description: List of providers used for this response
-          example: ["provider1", "provider2"]
-        cacheHit:
-          type: boolean
-          description: Whether the response was served from cache
-          example: true
-        timestamp:
-          type: string
-          format: date-time
-          description: Response timestamp
-          example: "2023-12-01T10:30:00Z"
-
-
 
     ErrorResponse:
       type: object
@@ -182,9 +167,9 @@ components:
           description: Error message
           example: "Invalid request parameters"
         code:
-          type: string
-          description: Error code
-          example: "INVALID_REQUEST"
+          type: integer
+          description: HTTP status code
+          example: 400
         timestamp:
           type: string
           format: date-time

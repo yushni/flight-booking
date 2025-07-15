@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"time"
 
 	"flight-booking/internal/api/gen"
 	"flight-booking/internal/models"
@@ -26,13 +25,12 @@ func NewRouteHandler(routeService usecases.Routes, logger logger.Logger) *RouteH
 
 // GetRoutes implements the GetRoutes method from ServerInterface.
 func (h *RouteHandler) GetRoutes(c *gin.Context, params gen.GetRoutesParams) {
+	ctx := c.Request.Context()
 	filters := h.convertParamsToFilters(params)
 
-	response, err := h.routeService.GetRoutes(c.Request.Context(), filters)
+	response, err := h.routeService.GetRoutes(ctx, filters)
 	if err != nil {
-		h.logger.Error("Service error", "error", err)
-		h.sendErrorResponse(c, http.StatusInternalServerError, "SERVICE_ERROR", "Failed to fetch routes")
-
+		_ = c.Error(err)
 		return
 	}
 
@@ -62,22 +60,10 @@ func (h *RouteHandler) convertParamsToFilters(params gen.GetRoutesParams) models
 	return filters
 }
 
-func (h *RouteHandler) convertToAPIResponse(response *models.RoutesResponse) *gen.RoutesResponse {
-	if response == nil {
-		return &gen.RoutesResponse{
-			Data: []gen.FlightRoute{},
-			Metadata: gen.ResponseMetadata{
-				TotalCount:    0,
-				ProvidersUsed: []string{},
-				CacheHit:      false,
-				Timestamp:     time.Now(),
-			},
-		}
-	}
+func (h *RouteHandler) convertToAPIResponse(routes []models.Route) *gen.RoutesResponse {
+	apiRoutes := make([]gen.FlightRoute, len(routes))
 
-	apiRoutes := make([]gen.FlightRoute, len(response.Data))
-
-	for i, route := range response.Data {
+	for i, route := range routes {
 		apiRoute := gen.FlightRoute{
 			Airline:            route.Airline,
 			SourceAirport:      route.SourceAirport,
@@ -99,21 +85,5 @@ func (h *RouteHandler) convertToAPIResponse(response *models.RoutesResponse) *ge
 
 	return &gen.RoutesResponse{
 		Data: apiRoutes,
-		Metadata: gen.ResponseMetadata{
-			TotalCount:    response.Metadata.TotalCount,
-			ProvidersUsed: response.Metadata.ProvidersUsed,
-			CacheHit:      response.Metadata.CacheHit,
-			Timestamp:     response.Metadata.Timestamp,
-		},
 	}
-}
-
-func (h *RouteHandler) sendErrorResponse(c *gin.Context, statusCode int, errorCode, message string) {
-	errorResponse := gen.ErrorResponse{
-		Error:     message,
-		Code:      errorCode,
-		Timestamp: time.Now(),
-	}
-
-	c.JSON(statusCode, errorResponse)
 }
