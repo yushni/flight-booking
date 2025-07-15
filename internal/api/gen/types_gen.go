@@ -39,9 +39,6 @@ type FlightRoute struct {
 	// Equipment Equipment type (optional)
 	Equipment *string `json:"equipment"`
 
-	// Provider Data provider source
-	Provider *string `json:"provider,omitempty"`
-
 	// SourceAirport Source airport code (IATA 3-letter code)
 	SourceAirport string `json:"sourceAirport"`
 
