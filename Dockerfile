@@ -14,4 +14,4 @@ COPY --from=builder /app/flight-booking ./
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
 EXPOSE 80
-ENTRYPOINT ["./flowers"]
+ENTRYPOINT ["./flight-booking"]
