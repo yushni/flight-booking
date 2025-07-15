@@ -1,5 +1,7 @@
 # Flight Booking Routes API
 
+> **Important Note**: Implementation includes only the backend API implementation. No UI components are included.
+
 A cloud-native flight booking aggregator system that provides a unified API for flight route information from multiple providers.
 
 **Live API**: http://flight-booking-lb-1909835177.eu-central-1.elb.amazonaws.com/api/v1/routes
