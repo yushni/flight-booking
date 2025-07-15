@@ -1,5 +1,6 @@
 # Flight Booking Routes API
 
+http://flight-booking-lb-1909835177.eu-central-1.elb.amazonaws.com/api/v1/routes
 A cloud-native flight booking aggregator system that provides a unified API for flight route information from multiple providers. Built with Go, following clean architecture principles, and ready for deployment in any cloud environment.
 
 ## Features
@@ -11,7 +12,7 @@ A cloud-native flight booking aggregator system that provides a unified API for 
 - **Dependency Injection**: Uses Uber FX for robust dependency management
 - **OpenAPI Documentation**: Auto-generated swagger documentation
 - **Production Ready**: Includes logging, metrics, graceful shutdown, and error handling
-- **Cloud Native**: Containerized with Docker and ready for Kubernetes deployment
+- **Cloud Native**: Containerized with Docker
 
 ## Architecture
 

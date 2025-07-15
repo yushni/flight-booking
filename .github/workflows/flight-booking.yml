@@ -26,7 +26,6 @@ jobs:
         run: docker build -t flight-booking .
 
   docker-push:
-    if: github.event_name == 'release'
     name: Push Docker image to Amazon ECR 🚀
     runs-on: ubuntu-latest
     needs:
@@ -54,15 +53,15 @@ jobs:
           push: true
           tags: "746669229448.dkr.ecr.eu-central-1.amazonaws.com/flight-booking:${{ github.ref_name }}"
 
-      - name: Render new ECS task definition
+      - name: Render new ECS task definition 📝
         id: render-task
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: ecs-task-definition.json
+          task-definition: infra/ecs/ecs-task-definition.json
           container-name: flight-booking
           image: "746669229448.dkr.ecr.eu-central-1.amazonaws.com/flight-booking:${{ github.ref_name }}"
 
-      - name: Deploy new task definition to ECS service
+      - name: Deploy new task definition to ECS service 🚀
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.render-task.outputs.task-definition }}
