@@ -10,7 +10,6 @@ FROM scratch
 
 WORKDIR /app
 
-COPY ./public ./public
 COPY --from=builder /app/flight-booking ./
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
