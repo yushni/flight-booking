@@ -13,11 +13,7 @@ import (
 	"go.uber.org/fx"
 )
 
-func NewServer(
-	routeHandlers *handlers.RouteHandler,
-	logger logger.Logger,
-	lc fx.Lifecycle,
-) {
+func NewServer(routeHandlers *handlers.RouteHandler, logger logger.Logger, lc fx.Lifecycle) {
 	allHandlers := struct {
 		*handlers.RouteHandler
 	}{
@@ -36,11 +32,14 @@ func NewServer(
 	})
 
 	srv := &http.Server{
-		Addr:    ":8080",
-		Handler: engine.Handler(),
+		Addr:              ":8080",
+		Handler:           engine.Handler(),
+		ReadHeaderTimeout: 60 * time.Second,
+		ReadTimeout:       60 * time.Second,
+		WriteTimeout:      60 * time.Second,
 	}
 
-	lc.Append(fx.StartHook(func(ctx context.Context) error {
+	lc.Append(fx.StartHook(func(_ context.Context) error {
 		go func() {
 			if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 				logger.Error("listen: %s\n", err)
@@ -53,10 +52,7 @@ func NewServer(
 	lc.Append(fx.StopHook(func(ctx context.Context) error {
 		logger.Info("shutting down server...")
 
-		shutdownCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
-		defer cancel()
-
-		if err := srv.Shutdown(shutdownCtx); err != nil {
+		if err := srv.Shutdown(ctx); err != nil {
 			logger.Error("shutdown failed", err)
 		}
 

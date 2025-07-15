@@ -2,6 +2,7 @@ package logger
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"flight-booking/internal/config"
@@ -9,7 +10,10 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+type ctxKey struct{}
+
 type Logger interface {
+	SetIntoContext(ctx context.Context) context.Context
 	Debug(msg string, fields ...interface{})
 	Info(msg string, fields ...interface{})
 	Warn(msg string, fields ...interface{})
@@ -18,9 +22,10 @@ type Logger interface {
 }
 
 func Context(ctx context.Context) Logger {
-	if logger, ok := ctx.Value("logger").(Logger); ok {
+	if logger, ok := ctx.Value(ctxKey{}).(Logger); ok {
 		return logger
 	}
+
 	return &logger{logger: zap.NewNop()}
 }
 
@@ -72,10 +77,8 @@ func New(config config.Config) (Logger, error) {
 	}, nil
 }
 
-func (l *logger) Clone() Logger {
-	return &logger{
-		logger: l.logger.WithOptions(zap.AddCallerSkip(1)),
-	}
+func (l *logger) SetIntoContext(ctx context.Context) context.Context {
+	return context.WithValue(ctx, ctxKey{}, l)
 }
 
 func (l *logger) Debug(msg string, fields ...interface{}) {
@@ -105,7 +108,7 @@ func (l *logger) convertFields(fields ...interface{}) []zap.Field {
 		fields = append(fields, nil)
 	}
 
-	zapFields := make([]zap.Field, 0, len(fields)/2)
+	zapFields := make([]zap.Field, 0, len(fields))
 
 	for i := 0; i < len(fields); i += 2 {
 		key, ok := fields[i].(string)
@@ -121,9 +124,14 @@ func (l *logger) convertFields(fields ...interface{}) []zap.Field {
 }
 
 func (l *logger) Sync() error {
-	return l.logger.Sync()
+	err := l.logger.Sync()
+	if err != nil {
+		return fmt.Errorf("failed to sync logger: %w", err)
+	}
+
+	return nil
 }
 
 func (l *logger) Close() error {
-	return l.logger.Sync()
+	return l.Sync()
 }

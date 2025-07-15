@@ -31,6 +31,7 @@ func (h *RouteHandler) GetRoutes(c *gin.Context, params gen.GetRoutesParams) {
 	response, err := h.routeService.GetRoutes(ctx, filters)
 	if err != nil {
 		_ = c.Error(err)
+
 		return
 	}
 
@@ -70,14 +71,8 @@ func (h *RouteHandler) convertToAPIResponse(routes []models.Route) *gen.RoutesRe
 			DestinationAirport: route.DestinationAirport,
 			CodeShare:          gen.FlightRouteCodeShare(route.CodeShare),
 			Stops:              route.Stops,
-		}
-
-		if route.Equipment != nil {
-			apiRoute.Equipment = route.Equipment
-		}
-
-		if route.Provider != "" {
-			apiRoute.Provider = &route.Provider
+			Equipment:          route.Equipment,
+			Provider:           &route.Provider,
 		}
 
 		apiRoutes[i] = apiRoute

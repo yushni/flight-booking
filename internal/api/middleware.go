@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"net/http"
 	"time"
 
@@ -53,7 +52,7 @@ func Panic() gen.MiddlewareFunc {
 }
 
 func ErrorHandler() func(*gin.Context, error, int) {
-	return func(c *gin.Context, err error, i int) {
+	return func(c *gin.Context, _ error, _ int) {
 		c.Next()
 
 		if len(c.Errors) > 0 {
@@ -90,11 +89,10 @@ func RequestID() gen.MiddlewareFunc {
 
 func ContextLogger(logger logger.Logger) gen.MiddlewareFunc {
 	return func(c *gin.Context) {
-		reqID := c.GetString("request_id")
+		ctx := c.Request.Context()
+		l := logger.With("request_id", c.GetString("request_id"))
 
-		l := logger.With("request_id", reqID)
-		ctx := context.WithValue(c.Request.Context(), "logger", l)
-
+		ctx = l.SetIntoContext(ctx)
 		c.Request = c.Request.WithContext(ctx)
 		c.Next()
 	}

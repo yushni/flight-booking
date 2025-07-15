@@ -1,7 +1,6 @@
 package providers
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -25,6 +24,7 @@ func (m *MockCache) GetOrLoad(key string, ttl time.Duration, loader func() (any,
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
+
 	return args.Get(0), args.Error(1)
 }
 
@@ -123,7 +123,7 @@ func TestProvider_GetRoutes_Success(t *testing.T) {
 	cfg := createTestConfig(server1.URL, server2.URL)
 	provider := New(cfg, mockCache)
 
-	ctx := context.Background()
+	ctx := t.Context()
 	filters := models.RouteFilters{}
 	routes, err := provider.GetRoutes(ctx, filters)
 
@@ -150,7 +150,7 @@ func TestProvider_GetRoutes_Provider2Fails(t *testing.T) {
 	cfg := createTestConfig(server1.URL, server2.URL)
 	provider := New(cfg, cache.New())
 
-	ctx := context.Background()
+	ctx := t.Context()
 	filters := models.RouteFilters{}
 	routes, err := provider.GetRoutes(ctx, filters)
 
@@ -174,7 +174,7 @@ func TestProvider_GetRoutes_BothProvidersFail(t *testing.T) {
 	cfg := createTestConfig(server1.URL, server2.URL)
 	provider := New(cfg, cache.New())
 
-	ctx := context.Background()
+	ctx := t.Context()
 	filters := models.RouteFilters{}
 	routes, err := provider.GetRoutes(ctx, filters)
 
@@ -186,8 +186,10 @@ func TestProvider_CircuitBreakerFunctionality(t *testing.T) {
 	t.Parallel()
 
 	callCount := 0
+
 	server1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		callCount++
+
 		w.WriteHeader(http.StatusInternalServerError)
 	}))
 	defer server1.Close()
@@ -200,7 +202,7 @@ func TestProvider_CircuitBreakerFunctionality(t *testing.T) {
 	cfg := createTestConfig(server1.URL, server2.URL)
 	provider := New(cfg, cache.New())
 
-	ctx := context.Background()
+	ctx := t.Context()
 	filters := models.RouteFilters{}
 
 	routes, err := provider.GetRoutes(ctx, filters)
@@ -208,19 +210,20 @@ func TestProvider_CircuitBreakerFunctionality(t *testing.T) {
 	require.NoError(t, err)
 	assert.Empty(t, routes)
 
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		routes, err = provider.GetRoutes(ctx, filters)
 		require.NoError(t, err)
 		assert.Empty(t, routes)
 	}
 
-	assert.Equal(t, callCount, 3, "Server should not be called after circuit breaker opens")
+	assert.Equal(t, 3, callCount, "Server should not be called after circuit breaker opens")
 }
 
 func TestProvider_RetryFunctionality(t *testing.T) {
 	t.Parallel()
 
 	callCountServer1 := 0
+
 	server1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		callCountServer1++
 		if callCountServer1 <= 1 {
@@ -248,7 +251,7 @@ func TestProvider_RetryFunctionality(t *testing.T) {
 	cfg := createTestConfig(server1.URL, server2.URL)
 	provider := New(cfg, cache.New())
 
-	ctx := context.Background()
+	ctx := t.Context()
 	filters := models.RouteFilters{}
 
 	routes, err := provider.GetRoutes(ctx, filters)
@@ -282,7 +285,7 @@ func TestProvider_CacheHit(t *testing.T) {
 	cfg := createTestConfig(server1.URL, server2.URL)
 	provider := New(cfg, mockCache)
 
-	ctx := context.Background()
+	ctx := t.Context()
 	filters := models.RouteFilters{}
 	routes, err := provider.GetRoutes(ctx, filters)
 
@@ -329,8 +332,12 @@ func TestProvider_ApplyFilters(t *testing.T) {
 			expected: 2,
 		},
 		{
-			name:     "Filter by max stops",
-			filters:  models.RouteFilters{MaxStops: func() *int { i := 1; return &i }()},
+			name: "Filter by max stops",
+			filters: models.RouteFilters{MaxStops: func() *int {
+				i := 1
+
+				return &i
+			}()},
 			expected: 3,
 		},
 		{
@@ -352,6 +359,8 @@ func TestProvider_ApplyFilters(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			result := provider.ApplyFilters(tt.filters, routes)
 			assert.Len(t, result, tt.expected)
 		})

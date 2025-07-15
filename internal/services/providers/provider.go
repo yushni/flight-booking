@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 
 	"flight-booking/internal/config"
 	"flight-booking/internal/models"
@@ -50,22 +51,25 @@ func New(config config.Config, cache cache.Cache) Provider {
 
 func (p provider) GetRoutes(ctx context.Context, filters models.RouteFilters) ([]models.Route, error) {
 	var routes []models.Route
+
 	routes1, err := p.routesFromProvider1(ctx)
 	if err != nil {
 		logger.Context(ctx).Error("error fetching routes from provider1", "error", err)
 	}
 
 	routes = append(routes, routes1...)
+
 	routes2, err := p.routesFromProvider2(ctx)
 	if err != nil {
 		logger.Context(ctx).Error("error fetching routes from provider2", "error", err)
 	}
 
 	routes = append(routes, routes2...)
+
 	return p.ApplyFilters(filters, routes), nil
 }
 
-func (p provider) routesFromProvider1(ctx context.Context) ([]models.Route, error) {
+func (p provider) routesFromProvider1(ctx context.Context) ([]models.Route, error) { //nolint:dupl
 	data, err := p.cache.GetOrLoad("provider1_routes", p.config.Providers.Provider1CacheTTL, func() (interface{}, error) {
 		var res []models.Route
 
@@ -74,10 +78,10 @@ func (p provider) routesFromProvider1(ctx context.Context) ([]models.Route, erro
 			SetResult(&res).
 			Get("")
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("provider1 request failed: %w", err)
 		}
 
-		if resp.StatusCode() != 200 {
+		if resp.StatusCode() != http.StatusOK {
 			return nil, fmt.Errorf("provider1 request failed: %s", resp.String())
 		}
 
@@ -94,7 +98,7 @@ func (p provider) routesFromProvider1(ctx context.Context) ([]models.Route, erro
 	return nil, errors.New("unexpected data type from cache for provider1 routes")
 }
 
-func (p provider) routesFromProvider2(ctx context.Context) ([]models.Route, error) {
+func (p provider) routesFromProvider2(ctx context.Context) ([]models.Route, error) { //nolint:dupl
 	data, err := p.cache.GetOrLoad("provider2_routes", p.config.Providers.Provider2CacheTTL, func() (interface{}, error) {
 		var res []models.Route
 
@@ -103,10 +107,10 @@ func (p provider) routesFromProvider2(ctx context.Context) ([]models.Route, erro
 			SetResult(&res).
 			Get("")
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("provider2 request failed: %w", err)
 		}
 
-		if resp.StatusCode() != 200 {
+		if resp.StatusCode() != http.StatusOK {
 			return nil, fmt.Errorf("provider2 request failed: %s", resp.String())
 		}
 
@@ -127,6 +131,7 @@ func (p provider) ApplyFilters(filters models.RouteFilters, routes []models.Rout
 	if len(routes) == 0 {
 		return routes
 	}
+
 	if filters.Limit == 0 {
 		filters.Limit = 100
 	}
@@ -134,29 +139,19 @@ func (p provider) ApplyFilters(filters models.RouteFilters, routes []models.Rout
 	filtered := make([]models.Route, 0, len(routes))
 
 	skipped := 0
+
 	for _, route := range routes {
-		if filters.Airline != "" && route.Airline != filters.Airline {
-			continue
-		}
-
-		if filters.SourceAirport != "" && route.SourceAirport != filters.SourceAirport {
-			continue
-		}
-
-		if filters.DestinationAirport != "" && route.DestinationAirport != filters.DestinationAirport {
-			continue
-		}
-
-		if filters.MaxStops != nil && route.Stops > *filters.MaxStops {
-			continue
-		}
-
 		if filters.Limit > 0 && len(filtered) >= filters.Limit {
 			break
 		}
 
+		if !p.matchedFilters(filters, route) {
+			continue
+		}
+
 		if filters.Offset > 0 && skipped < filters.Offset {
 			skipped++
+
 			continue
 		}
 
@@ -164,4 +159,24 @@ func (p provider) ApplyFilters(filters models.RouteFilters, routes []models.Rout
 	}
 
 	return filtered
+}
+
+func (p provider) matchedFilters(filters models.RouteFilters, route models.Route) bool {
+	if filters.Airline != "" && route.Airline != filters.Airline {
+		return false
+	}
+
+	if filters.SourceAirport != "" && route.SourceAirport != filters.SourceAirport {
+		return false
+	}
+
+	if filters.DestinationAirport != "" && route.DestinationAirport != filters.DestinationAirport {
+		return false
+	}
+
+	if filters.MaxStops != nil && route.Stops > *filters.MaxStops {
+		return false
+	}
+
+	return true
 }

@@ -22,11 +22,11 @@ type Config struct {
 }
 
 type ProvidersConfig struct {
-	Provider1BaseURL  string        `env:"PROVIDER1_BASE_URL"  envDefault:"https://4r5rvu2fcydfzr5gymlhcsnfem0lyxoe.lambda-url.eu-central-1.on.aws/provider/flights1"`
+	Provider1BaseURL  string        `env:"PROVIDER1_BASE_URL"  envDefault:"https://4r5rvu2fcydfzr5gymlhcsnfem0lyxoe.lambda-url.eu-central-1.on.aws/provider/flights1"` //nolint: lll
 	Provider1Timeout  time.Duration `env:"PROVIDER1_TIMEOUT"   envDefault:"30s"`
 	Provider1CacheTTL time.Duration `env:"PROVIDER1_CACHE_TTL" envDefault:"60s"`
 
-	Provider2BaseURL  string        `env:"PROVIDER2_BASE_URL"  envDefault:"https://4r5rvu2fcydfzr5gymlhcsnfem0lyxoe.lambda-url.eu-central-1.on.aws/provider/flights2"`
+	Provider2BaseURL  string        `env:"PROVIDER2_BASE_URL"  envDefault:"https://4r5rvu2fcydfzr5gymlhcsnfem0lyxoe.lambda-url.eu-central-1.on.aws/provider/flights2"` //nolint: lll
 	Provider2Timeout  time.Duration `env:"PROVIDER2_TIMEOUT"   envDefault:"30s"`
 	Provider2CacheTTL time.Duration `env:"PROVIDER2_CACHE_TTL" envDefault:"60s"`
 }
