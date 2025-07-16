@@ -23,6 +23,7 @@ type Logger interface {
 
 func Context(ctx context.Context) Logger {
 	if logger, ok := ctx.Value(ctxKey{}).(Logger); ok {
+
 		return logger
 	}
 
